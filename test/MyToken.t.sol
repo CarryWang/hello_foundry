@@ -11,7 +11,7 @@ contract MyTokenTest is Test {
 
     function setUp() external {
         vm.prank(alice);
-        myToken = new MyToken();
+        myToken = new MyToken("CarryCoin", "CC");
     }
 
     function testMint() external {

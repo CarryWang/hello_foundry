@@ -8,7 +8,7 @@ error NotMinter();
 contract MyToken is ERC20 {
     address public immutable minter;
 
-    constructor() ERC20("CarryCoin", "CC") {
+    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {
         minter = msg.sender;
     }
 

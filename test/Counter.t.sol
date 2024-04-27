@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Test, console} from "forge-std/Test.sol";
+import "forge-std/Test.sol";
 import {Counter} from "../src/Counter.sol";
 
 contract CounterTest is Test {
@@ -20,5 +20,14 @@ contract CounterTest is Test {
     function testFuzz_SetNumber(uint256 x) public {
         counter.setNumber(x);
         assertEq(counter.number(), x);
+    }
+
+    function testFail_Decrement_at_first() public {
+        counter.decrement();
+    }
+
+    function test_Decrement_at_first() public {
+        vm.expectRevert(stdError.arithmeticError);
+        counter.decrement();
     }
 }

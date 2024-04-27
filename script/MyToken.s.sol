@@ -12,7 +12,7 @@ contract MyTokenScript is Script {
 
         vm.startBroadcast(Carry);
 
-        MyToken myToken = new MyToken();
+        MyToken myToken = new MyToken("CarryCoin", "CC");
 
         myToken.mint(100);
 
