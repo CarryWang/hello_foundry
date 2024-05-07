@@ -16,8 +16,8 @@ contract NFTMarketPermitTest is Test {
         address seller = makeAddr("seller");
         address buyer = makeAddr("buyer");
 
-        console.log(seller, "seller");
-        console.log(buyer, "buyer");
+        // console.log(seller, "seller");
+        // console.log(buyer, "buyer");
 
         vm.prank(seller);
         myNFT = new MyNFT();
