@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "./MyERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {IReceiver} from "./IReceiver.sol";
 
-contract NFTMarket is IERC721Receiver, IReceiver {
+contract NFTMarketPermit is IERC721Receiver {
     // nft的报价
     mapping(uint256 => uint256) public tokenIdPrice;
     // nft的出售者
@@ -14,9 +14,12 @@ contract NFTMarket is IERC721Receiver, IReceiver {
     address public immutable token;
     address public immutable nftToken;
 
+    address public whiteListSigner;
+
     constructor(address _token, address _nftToken) {
         token = _token;
         nftToken = _nftToken;
+        whiteListSigner = msg.sender;
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
@@ -37,6 +40,19 @@ contract NFTMarket is IERC721Receiver, IReceiver {
         return true;
     }
 
+    function permitBuy(uint256 tokenId, address user, uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        external
+        returns (bool)
+    {
+        // require(user == "白名单地址");
+        require(whiteListSigner == user, "only whiteListSigner");
+        IERC20Permit(token).permit(user, address(this), amount, deadline, v, r, s);
+
+        buy(tokenId, amount);
+
+        return true;
+    }
+
     function buy(uint256 tokenId, uint256 amount) public returns (bool) {
         require(amount >= tokenIdPrice[tokenId], "low price");
         // 检查nft是否已经售卖
@@ -46,20 +62,6 @@ contract NFTMarket is IERC721Receiver, IReceiver {
         IERC20(token).transferFrom(msg.sender, tokenSeller[tokenId], tokenIdPrice[tokenId]);
         // nft从市场转移给买家
         IERC721(nftToken).transferFrom(address(this), msg.sender, tokenId);
-        return true;
-    }
-
-    function tokensReceived(address _from, uint256 amount, bytes calldata data) public returns (bool) {
-        require(msg.sender == token, "invalid caller");
-
-        uint256 tokenId = abi.decode(data, (uint256));
-
-        require(tokenIdPrice[tokenId] <= amount, "payment value is less than list price");
-
-        // token从市场转移给卖家
-        IERC20(token).transfer(tokenSeller[tokenId], amount);
-        // nft从市场转移给买家
-        IERC721(nftToken).safeTransferFrom(address(this), _from, tokenId);
         return true;
     }
 }
