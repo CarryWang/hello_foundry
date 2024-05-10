@@ -19,6 +19,7 @@ contract InscriptionFactory {
     }
 
     function deployInscription(uint256 totalSupply, uint256 perMint, uint256 price) public returns (address) {
+        creator = msg.sender;
         address clone = impl.clone();
         Inscription(clone).initialize(totalSupply, perMint, price, msg.sender, factoryOwner);
         deployedTokens[clone] = true;
@@ -28,8 +29,14 @@ contract InscriptionFactory {
 
     function mintInscription(address tokenAddr) public payable returns (bool) {
         require(deployedTokens[tokenAddr], "token already deployed");
-        Inscription(tokenAddr).mint{value: msg.value}(msg.sender);
+        Inscription(tokenAddr).mint(msg.sender);
 
-        return true;
+        uint256 feeToCreator = (msg.value * 95) / 100;
+        uint256 feeToFactoryOwner = (msg.value * 5) / 100;
+
+        (bool successCreator,) = creator.call{value: feeToCreator}("");
+        (bool successFactoryOwner,) = factoryOwner.call{value: feeToFactoryOwner}("");
+
+        return successCreator && successFactoryOwner;
     }
 }
