@@ -66,11 +66,17 @@ contract NFTUpdateTest is Test {
         console.log(nftId2);
         console.log(nftPermit.ownerOf(nftId2));
 
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                keccak256(abi.encode(keccak256("PermitList(uint256 tokenId,uint256 amount)"), nftId2, nftId2Price))
-            )
-        );
+        // 构造签名========
+        bytes32 EIP721TYPE_HASH =
+            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+
+        bytes32 DOMAIN_SEPARATOR = keccak256(abi.encode(EIP721TYPE_HASH, "NFTMarketV2", "1", 1, address(nftMktV2)));
+
+        bytes32 PERMIT_TYPEHASH = keccak256("PermitList(uint256 tokenId,uint256 amount)");
+
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, nftId2, nftId2Price));
+
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(sellerKey, digest);
 

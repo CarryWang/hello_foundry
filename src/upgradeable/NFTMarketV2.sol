@@ -25,9 +25,16 @@ contract NFTMarketV2 is Initializable {
 
     // 调用此方法前，需要先setApprovalForAll
     function permitList(uint256 tokenId, uint256 amount, uint8 v, bytes32 r, bytes32 s) external returns (bool) {
+        bytes32 EIP712TYPE_HASH =
+            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+
+        bytes32 DOMAIN_SEPARATOR = keccak256(abi.encode(EIP712TYPE_HASH, "NFTMarketV2", "1", 1, address(this)));
+
         bytes32 PERMIT_TYPEHASH = keccak256("PermitList(uint256 tokenId,uint256 amount)");
 
-        bytes32 digest = keccak256(abi.encodePacked(keccak256(abi.encode(PERMIT_TYPEHASH, tokenId, amount))));
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, tokenId, amount));
+
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
 
         address signer = ecrecover(digest, v, r, s);
 
